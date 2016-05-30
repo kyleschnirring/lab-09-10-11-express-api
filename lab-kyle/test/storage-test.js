@@ -1,68 +1,58 @@
 'use strict';
 
 const expect = require('chai').expect;
-const Storage = require('../lib/storage');
-const testStorage = new Storage(`${__dirname}/data`);
+const storage = require('../lib/storage.js');
 
-describe('testing module storage', function(){
-  describe('testing method setItem', function(){
-    before((done) => {
-      testStorage.setItem('note', {id:321, content: 'test content'})
-      .then((item) => {
-        this.result = item;
-        done();
-      })
-      .catch((err) => {
-        this.result = err;
-        done();
-      });
+describe('testing modules storage', function(){
+  describe('testing setItem', function(){
+    after((done) => {
+      delete storage.pool.note
+      done();
     });
 
-    it('should resolve a note', (done) => {
-      expect(this.result.id).to.equal(321);
-      expect(this.result.content).to.equal('test content');
-      done();
+    it('should create a note', (done) => {
+      storage.setItem('note', {id: 123, content: 'test data'}).then(function(){
+        expect(storage.pool.note[123].id).to.equal(123);
+        done();
+      }).catch(done);
     });
   });
 
-  describe('testing method fetchItem', function(){
+  describe('testing module fetchItem', function(){
     before((done) => {
-      testStorage.fetchItem('note', 321).then((item) => {
-        this.result = item;
-        done();
-      }).catch((err) => {
-        console.error(err);
-        this.result = err;
-        done();
-      });
+      storage.pool.unicorn = { '321': {id: 321, name: 'sluggacorn' }};
+      done();
     });
 
-    it('should reslove a note', (done) => {
-      expect(this.result.id).to.equal(321);
-      expect(this.result.content).to.equal('test content');
+    after((done) => {
+      delete storage.pool.unicorn
       done();
+    });
+
+    it('should resolve a unicorn', function(done){
+      storage.fetchItem('unicorn', 321).then((unicorn)=> {
+        expect(unicorn.id).to.equal(321);
+        done();
+      }).catch(done);
     });
   });
 
-
-  describe('testing method deleteItem', function(){
+  describe('testing module deleteItem', function(){
     before((done) => {
-      testStorage.deleteItem('note', 321)
-      .then(() => {
-        this.result = 'success';
-        done();
-      })
-      .catch((err) => {
-        this.result = err;
-        done();
-      });
-    });
-
-    it('should resolve undefined', (done) => {
-      expect(this.result).to.equal('success');
+      storage.pool.unicorn = { '321': {id: 321, name: 'sluggacorn' }};
       done();
     });
-  });
 
+    after((done) => {
+      delete storage.pool.unicorn
+      done();
+    });
+
+    it('should resolve a true', function(done){
+      storage.deleteItem('unicorn', 321).then((success)=> {
+        expect(success).to.equal(true);
+        done();
+      }).catch(done);
+    });
+  });
 });
-

@@ -1,69 +1,52 @@
 'use strict';
 
 const Router = require('express').Router;
-const bodyParser = require('body-parser').json();
-const co = require('co');
-const debug = require('debug')('demo:note-router');
+const noteRouter = module.exports =  new Router();
+const debug = require('debug')('note:note-router');
+const AppError = require('../lib/app-error');
+const storage = require('../lib/storage');
 const Note = require('../model/note');
-const Promise= require('bluebird');
 
-function createNote(req, storage){
-  debug('enter createNote');
-  var note;
-  const content = req.body.content;
-  try {
-    note = new Note(content);
-  } catch (err) {
-    return Promise.reject(err);
-  }
-  return storage.setItem('note', note);
-}
-
-function fetchNote(req , storage){
-  debug('fetchNote');
-  const id = req.params.id;
-  return storage.fetchItem('note', id);
-}
-
-function deleteNote(req, storage){
-  debug('deleteNote');
-  const id = req.params.id;
-  return storage.deleteItem('note', id);
-}
-
-module.exports = function(storage){
-  debug('module');
-  const noteRouter = Router();
-  noteRouter.use(bodyParser);
-  noteRouter.post('/', function(req, res){
-    debug('HIT /api/note POST');
-    co(function* (){
-      var note = yield createNote(req, storage);
-      return res.status(200).json(note);
-    }).catch((err) => {
-      res.sendError(err);
+function createNote(reqBody){
+  debug('createNote');
+  return new Promise(function(resolve, reject){
+    var note;
+    try {
+      note = new Note(reqBody.content);
+    } catch (err) {
+      reject(err);
+    }
+    storage.setItem('note', note).then(function(note){
+      resolve(note);
+    }).catch(function(err){
+      reject(err);
     });
   });
+}
 
-  noteRouter.get('/:id', function(req, res){
-    debug('HIT /ap/note/:id GET');
-    co(function* (){
-      var note = yield fetchNote(req, storage);
-      return res.status(200).json(note);
-    }).catch((err) => {
-      res.sendError(err);
-    });
+noteRouter.post('/', function(req, res){
+  debug('hit endpoint /api/note POST');
+  createNote(req.body).then(function(note){
+    res.status(200).json(note);
+  }).catch(function(err){
+    console.error(err.message);
+    if(AppError.isAppError(err)){
+      res.status(err.statusCode).send(err.responseMessage);
+      return;
+    }
+    res.status(500).send('interal server error');
   });
+});
 
-  noteRouter.delete('/:id', function(req, res){
-    debug('HIT /api/note/:id DELETE');
-    co(function* (){
-      yield deleteNote(req, storage);
-      return res.status(200).json({msg: 'success'});
-    }).catch((err) => {
-      res.sendError(err);
-    });
+noteRouter.get('/:id', function(req, res){
+  storage.fetchItem('note', req.params.id).then(function(note){
+    res.status(200).json(note);
+  }).catch(function(err){
+    console.error(err.message);
+    if(AppError.isAppError(err)){
+      res.status(err.statusCode).send(err.responseMessage);
+      return;
+    }
+    res.status(500).send('interal server error');
   });
-
-  return noteRouter;
-};
+});

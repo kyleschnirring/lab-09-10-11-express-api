@@ -1,12 +1,12 @@
 'use strict';
 
 const uuid = require('node-uuid');
+const debug = require('debug')('note:note');
 const AppError = require('../lib/app-error');
 
 module.exports = function(content){
-  if (!content){
-    throw AppError.error400('Note constructor requires contetn and authorID');
-  }
+  debug('creating note');
+  if (!content) throw AppError.error400('note constructor requires content');
   this.id = uuid.v1();
   this.content = content;
   this.timestamp = new Date();
