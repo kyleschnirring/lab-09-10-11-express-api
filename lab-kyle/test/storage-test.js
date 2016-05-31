@@ -6,7 +6,7 @@ const storage = require('../lib/storage.js');
 describe('testing modules storage', function(){
   describe('testing setItem', function(){
     after((done) => {
-      delete storage.pool.note
+      delete storage.pool.note;
       done();
     });
 
@@ -25,7 +25,7 @@ describe('testing modules storage', function(){
     });
 
     after((done) => {
-      delete storage.pool.unicorn
+      delete storage.pool.unicorn;
       done();
     });
 
@@ -44,7 +44,7 @@ describe('testing modules storage', function(){
     });
 
     after((done) => {
-      delete storage.pool.unicorn
+      delete storage.pool.unicorn;
       done();
     });
 

@@ -4,7 +4,7 @@
 // require node modules
 // require npm modules
 const expect = require('chai').expect;
-const request = require('superagent'); 
+const request = require('superagent');
 // require app modules
 const server = require('../server');
 const storage = require('../lib/storage');
@@ -22,7 +22,7 @@ describe('testing module note-router', function(){
         done();
       });
       return;
-    };
+    }
     done();
   });
 
@@ -36,13 +36,13 @@ describe('testing module note-router', function(){
     }
     done();
   });
-
+//Testing POST
   describe('testing POST /api/note', function(){
     after((done) => {
       storage.pool = {};
       done();
     });
-    
+
     it('should return a note', function(done){
       request.post(baseUrl)
       .send({content: 'test note'})
@@ -54,8 +54,27 @@ describe('testing module note-router', function(){
       });
     });
   });
+//Testing POST bad request
+  describe('testing POST /api/note with bad request', function(){
+    after((done) => {
+      storage.pool = {};
+      done();
+    });
 
-  describe('testing GET /api/note', function(done){
+    it('should return a note', function(done){
+      request.post(baseUrl)
+      .send({wat: ''})
+      .end((err, res) => {
+        it('should return a 400 and bad request', () => {
+          expect(this.res.status).to.equal(400);
+          expect(this.res.text).to.equal('bad request');
+        });
+        done();
+      });
+    });
+  });
+//Testing GET Requests
+  describe('testing GET /api/note', function(){
     before((done) => {
       this.tempNote = new Note('test data');
       storage.setItem('note', this.tempNote);
@@ -77,4 +96,54 @@ describe('testing module note-router', function(){
       });
     });
   });
+//Testing GET 400
+  describe('testing GET /api/note with bad request', function(){
+    before((done) => {
+      this.tempNote = new Note('test data');
+      storage.setItem('note', this.tempNote);
+      done();
+    });
+
+    after((done) => {
+      storage.pool = {};
+      done();
+    });
+
+    it('should return a note', (done) => {
+      request.get(`${baseUrl}/${this.tempNote}`)
+      .end((err, res) => {
+        it('should return a 400 and bad request', () => {
+          expect(this.res.status).to.equal(400);
+          expect(this.res.text).to.equal('bad request');
+        });
+      });
+      done();
+    });
+  });
+//Testing GET 404
+  describe('testing GET /api/note with bad id for a not found', function(){
+    before((done) => {
+      this.tempNote = new Note('test data');
+      this.tempNote.id = 786564;
+      storage.setItem('note', this.tempNote);
+      done();
+    });
+
+    after((done) => {
+      storage.pool = {};
+      done();
+    });
+
+    it('should return a note', (done) => {
+      request.get(`${baseUrl}/${this.tempNote.id}`)
+      .end((err, res) => {
+        it('should return a 404 and not found', () => {
+          expect(this.res.status).to.equal(404);
+          expect(this.res.text).to.equal('not found');
+        });
+      });
+      done();
+    });
+  });
+
 });

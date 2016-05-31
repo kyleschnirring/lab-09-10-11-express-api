@@ -50,3 +50,31 @@ noteRouter.get('/:id', function(req, res){
     res.status(500).send('interal server error');
   });
 });
+
+noteRouter.put('/:id', function(req, res){
+  storage.fetchItem('note', req.params.id).then(function(note){
+    res.status(200).json(note);
+  }).catch(function(err){
+    console.error(err.message);
+    if(AppError.isAppError(err)){
+      res.status(err.statusCode).send(err.responseMessage);
+      return;
+    }
+    res.status(500).send('interal server error');
+  });
+});
+
+
+
+noteRouter.delete('/:id', function(req, res){
+  storage.deleteItem('note', req.params.id).then(function(note){
+    res.status(200).json(note);
+  }).catch(function(err){
+    console.error(err.message);
+    if(AppError.isAppError(err)){
+      res.status(err.statusCode).send(err.responseMessage);
+      return;
+    }
+    res.status(500).send('internal server error');
+  });
+});
