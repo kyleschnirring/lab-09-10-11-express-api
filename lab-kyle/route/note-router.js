@@ -2,6 +2,7 @@
 
 const Router = require('express').Router;
 const noteRouter = module.exports =  new Router();
+const JsonParser = require('body-parser').json();
 const debug = require('debug')('note:note-router');
 const AppError = require('../lib/app-error');
 const storage = require('../lib/storage');
@@ -24,10 +25,13 @@ function createNote(reqBody){
   });
 }
 
-noteRouter.post('/', function(req, res){
+noteRouter.post('/', JsonParser, function(req, res){
   debug('hit endpoint /api/note POST');
   createNote(req.body).then(function(note){
-    res.status(200).json(note);
+    storage.setItem('note', note).then(function(note){
+      console.log('set it and forget it');
+      res.status(200).json(note);
+    });
   }).catch(function(err){
     console.error(err.message);
     if(AppError.isAppError(err)){
@@ -39,7 +43,10 @@ noteRouter.post('/', function(req, res){
 });
 
 noteRouter.get('/:id', function(req, res){
+  console.log('got here');
+  console.log(req.params.id);
   storage.fetchItem('note', req.params.id).then(function(note){
+    console.log('almost');
     res.status(200).json(note);
   }).catch(function(err){
     console.error(err.message);
@@ -51,8 +58,14 @@ noteRouter.get('/:id', function(req, res){
   });
 });
 
-noteRouter.put('/:id', function(req, res){
-  storage.fetchItem('note', req.params.id).then(function(note){
+noteRouter.put('/:id', JsonParser, function(req, res){
+  console.log('got put');
+  var note = req.params;
+  storage.fetchItem('note', req.params.id);
+  console.log('shot put');
+  note.content = req.params.content;
+  storage.setItem('note',note).then(function(note){
+    console.log('set put');
     res.status(200).json(note);
   }).catch(function(err){
     console.error(err.message);
@@ -63,8 +76,6 @@ noteRouter.put('/:id', function(req, res){
     res.status(500).send('interal server error');
   });
 });
-
-
 
 noteRouter.delete('/:id', function(req, res){
   storage.deleteItem('note', req.params.id).then(function(note){
