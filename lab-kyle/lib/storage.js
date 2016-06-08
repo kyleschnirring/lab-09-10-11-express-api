@@ -17,6 +17,32 @@ exports.setItem = function(schema, item){
   });
 };
 
+exports.updateItem = function(schema, id, item) {
+  debug('updateItem');
+  return new Promise((resolve, reject)=>{
+    if (!id) {
+      var err = AppError.error400('bad request');
+      return reject(err);
+    }
+    if(!this.pool[schema]){
+      err = AppError.error404('storage schema not found');
+      return reject(err);
+    }
+    if(!this.pool[schema][id]){
+      err = AppError.error404('ID not found');
+      return reject(err);
+    }
+    if(item.content) {
+      this.pool[schema][id].content = item.content;
+    } else {
+      err = AppError.error400('bad request');
+      return reject(err);
+    }
+    resolve(this.pool[schema][id]);
+  });
+};
+
+
 exports.fetchItem = function(schema, id){
   debug('fetchItem');
   return new Promise((resolve, reject) => {
@@ -25,7 +51,7 @@ exports.fetchItem = function(schema, id){
       return reject(err);
     }
     if (!this.pool[schema][id]){
-      err = AppError.error404('storage item not found');
+      err = AppError.error400('bad request');
       return reject(err);
     }
     resolve(this.pool[schema][id]);

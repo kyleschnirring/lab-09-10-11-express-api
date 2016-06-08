@@ -100,7 +100,7 @@ describe('testing module note-router', function(){
   describe('testing GET /api/note with bad request', function(){
     before((done) => {
       this.tempNote = new Note('test data');
-      storage.setItem('note');
+      storage.setItem('note', this.tempNote);
       done();
     });
 
@@ -110,15 +110,12 @@ describe('testing module note-router', function(){
     });
 
     it('should return a bad request', (done) => {
-      request.get(`${baseUrl}`)
+      request.get(`${baseUrl}/ihoguyf`)
       .end((err, res) => {
-        it('should return a 400 and bad request', () => {
-          expect(res.status).to.equal(400);
-          expect(res.text).to.equal('bad request');
-          done();
-        });
+        expect(res.status).to.equal(400);
+        expect(res.text).to.equal('bad request');
+        done();
       });
-      done();
     });
   });
 //Testing GET 404
@@ -136,7 +133,7 @@ describe('testing module note-router', function(){
     });
 
     it('should return not found', (done) => {
-      request.get(`${baseUrl}/${this.tempNote.id}`)
+      request.get(`localhost:${port}/api/hello/${this.tempNote.id}`)
       .end((err, res) => {
         it('should return a 404 and not found', () => {
           expect(res.status).to.equal(404);
@@ -164,7 +161,7 @@ describe('testing module note-router', function(){
       request.put(`${baseUrl}/`)
       .send('98796857643')
       .end((err, res) => {
-        console.log('put 404');
+        //console.log('put 404');
         it('should return a 404 and a note', () => {
           expect(res.status).to.equal(404);
           expect(res.body.content).to.equal(this.tempNote.content);
@@ -173,6 +170,30 @@ describe('testing module note-router', function(){
         });
       });
       done();
+    });
+  });
+
+  describe('testing PUT /api/note with id', function(){
+    before((done) => {
+      this.tempNote = new Note('test data');
+      storage.setItem('note', this.tempNote);
+      done();
+    });
+
+    after((done) => {
+      storage.pool = {};
+      done();
+    });
+
+    it('should return note.id', (done) => {
+      request.put(`${baseUrl}/${this.tempNote.id}`)
+      .send({content:'this note', id:this.tempNote.id})
+      .end((err, res) => {
+        expect(res.status).to.equal(200);
+        expect(res.body.content).to.equal(this.tempNote.content);
+        expect(res.body.id).to.equal(this.tempNote.id);
+        done();
+      });
     });
   });
 //Testing DELETE
@@ -187,18 +208,13 @@ describe('testing module note-router', function(){
       storage.pool = {};
       done();
     });
-
     it('should return true', (done) => {
-      request.del(`${baseUrl}`)
-      .send(`${this.tempNote.id}`)
+      request.delete(`${baseUrl}/${this.tempNote.id}`)
       .end((err, res) => {
-        it('should return a 200 and not found', () => {
-          expect(res.status).to.equal(200);
-          expect(res.text).to.equal('true');
-          done();
-        });
+        expect(res.status).to.equal(200);
+        expect(res.text).to.equal('true');
+        done();
       });
-      done();
     });
   });
 
